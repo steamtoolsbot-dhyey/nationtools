@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nation Tools</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+    
+    <div class="titlebar">
+        <div class="titlebar-drag"></div>
+        <div class="titlebar-controls">
+            <button id="btn-minimize"><i class="fa-solid fa-minus"></i></button>
+            <button id="btn-maximize"><i class="fa-regular fa-square"></i></button>
+            <button id="btn-close" class="close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+    </div>
+    <header>
+        <img src="icons/bc415cad2ccab3cff12c3f5708491455.jpg" alt="Nation Tools Logo" class="logo">
+        <h1>NATION TOOLS</h1>
+    </header>
+
+    <div class="app-container navbar-top">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div style="flex: 1;">
+                <button class="tab-btn active" data-target="home-view">
+                    <i class="fa-solid fa-house"></i> <span>Home</span>
+                </button>
+                <button class="tab-btn" data-target="inject-view">
+                    <i class="fa-solid fa-syringe"></i> <span data-i18n="INJECT_LUA">Inject Lua</span>
+                </button>
+                <button class="tab-btn" data-target="database-view">
+                    <i class="fa-solid fa-database"></i> <span data-i18n="GAMES_DB">Games</span>
+                </button>
+                <button class="tab-btn" data-target="fixes-view">
+                    <i class="fa-solid fa-folder-open"></i> <span data-i18n="RYUU_FIXES">Fixes</span>
+                </button>
+                <button class="tab-btn" data-target="library-view">
+                    <i class="fa-solid fa-gamepad"></i> <span data-i18n="MY_LIBRARY">Library</span>
+                </button>
+                <button class="tab-btn" data-target="onlinefixes-view">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> Online Fixes
+                </button>
+                <button class="tab-btn" data-target="downloads-view">
+                    <i class="fa-solid fa-download"></i> Downloads
+                </button>
+                <button class="tab-btn" data-target="settings-view">
+                    <i class="fa-solid fa-gear"></i> Settings
+                </button>
+            </div>
+            
+            <div class="sidebar-footer" style="padding: 15px; margin-top: auto;">
+                <button class="btn" style="width: 100%; background: #5865F2; color: white; border: none; font-weight: bold; justify-content: center;" onclick="ipcRenderer.invoke('open-url', 'https://discord.gg/nationxero')">
+                    <i class="fa-brands fa-discord" style="margin-right: 8px; font-size: 16px;"></i> <span data-i18n="JOIN">Join Discord</span>
+                </button>
+            </div>
+            
+            <!-- Global Action -->
+            <button class="tab-btn text-danger" id="btnRestartSteam" style="margin-top: auto;">
+                <i class="fa-solid fa-power-off"></i> Restart Steam
+            </button>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            
+            <!-- 0. Home View -->
+            <section id="home-view" class="view active">
+                <div class="home-hero">
+                    <h1 class="home-title">NATION TOOLS</h1>
+                    <p class="home-subtitle">Your all-in-one Steam toolkit</p>
+                    
+                    <!-- Quick Stats -->
+                    <div class="home-stats">
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-brands fa-steam"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="statLibraryCount">—</div>
+                                <div class="stat-label">Games Installed</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-wrench"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="statFixesCount">—</div>
+                                <div class="stat-label">Fixes Available</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-download"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="statDownloadsCount">0</div>
+                                <div class="stat-label">Active Downloads</div>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon"><i class="fa-solid fa-shield-halved"></i></div>
+                            <div class="stat-info">
+                                <div class="stat-value" id="statVersion">—</div>
+                                <div class="stat-label">App Version</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Feature Cards -->
+                    <h3 class="home-section-title"><i class="fa-solid fa-compass"></i> Quick Navigation</h3>
+                    <div class="home-grid">
+                        <div class="home-card" data-navigate="inject-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-syringe"></i></div>
+                                <div class="home-card-title">Inject Lua</div>
+                                <div class="home-card-desc">Upload .lua files directly into Steam config</div>
+                            </div>
+                        </div>
+                        
+                        <div class="home-card" data-navigate="database-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-database"></i></div>
+                                <div class="home-card-title">Games Database</div>
+                                <div class="home-card-desc">Search Steam's database for any game</div>
+                            </div>
+                        </div>
+                        
+                        <div class="home-card" data-navigate="fixes-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-folder-open"></i></div>
+                                <div class="home-card-title">Ryuu Fixes</div>
+                                <div class="home-card-desc">Browse the complete fix repository</div>
+                            </div>
+                        </div>
+                        
+                        <div class="home-card" data-navigate="library-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/730/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-gamepad"></i></div>
+                                <div class="home-card-title">My Library</div>
+                                <div class="home-card-desc">View your installed Steam games</div>
+                            </div>
+                        </div>
+                        
+                        <div class="home-card" data-navigate="onlinefixes-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/1086940/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-cloud-arrow-down"></i></div>
+                                <div class="home-card-title">Online Fixes</div>
+                                <div class="home-card-desc">Auto-install multiplayer fixes</div>
+                            </div>
+                        </div>
+                        
+                        <div class="home-card" data-navigate="downloads-view">
+                            <div class="home-card-bg" style="background-image: url('https://cdn.cloudflare.steamstatic.com/steam/apps/892970/header.jpg');"></div>
+                            <div class="home-card-overlay"></div>
+                            <div class="home-card-content">
+                                <div class="home-card-icon"><i class="fa-solid fa-download"></i></div>
+                                <div class="home-card-title">Downloads</div>
+                                <div class="home-card-desc">Track active downloads & installations</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Getting Started Tips -->
+                    <h3 class="home-section-title"><i class="fa-solid fa-lightbulb"></i> Getting Started</h3>
+                    <div class="home-tips">
+                        <div class="tip-card">
+                            <div class="tip-step">1</div>
+                            <div class="tip-text">
+                                <strong>Find Your Game</strong>
+                                <span>Search the Games page or Ryuu Fixes to find your game and get its App ID or Lua.</span>
+                            </div>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-step">2</div>
+                            <div class="tip-text">
+                                <strong>Get the Fix</strong>
+                                <span>Browse Online Fixes or Ryuu Fixes to download the Lua/Manifest for your game.</span>
+                            </div>
+                        </div>
+                        <div class="tip-card">
+                            <div class="tip-step">3</div>
+                            <div class="tip-text">
+                                <strong>Apply & Play</strong>
+                                <span>Click "Apply Fix", restart Steam, and launch your game. Fixes are not applied until you click apply!</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lite Mode Toggle -->
+                    <div class="lite-mode-toggle-card" id="liteModeCard">
+                        <div class="lite-mode-info">
+                            <i class="fa-solid fa-bolt" style="font-size: 20px; color: var(--accent);"></i>
+                            <div>
+                                <strong>Performance Mode</strong>
+                                <span style="color: var(--text-muted); font-size: 13px; display: block;">Use native Windows theme for lower-end PCs. Disables animations, particles, and custom styling.</span>
+                            </div>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="liteModeToggle">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 1. Inject Lua View -->
+            <section id="inject-view" class="view">
+                <div class="panel">
+                    <h2><i class="fa-solid fa-file-import"></i> Manual Injection</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Upload a .lua or .zip file manually to inject it into your Steam config.
+                    </p>
+                    
+                    <div class="drop-zone" id="dropZone">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                        <h3>Drag & Drop your .lua or .zip file here</h3>
+                        <p>or click to browse files</p>
+                        <input type="file" id="fileInput" accept=".lua,.zip" style="display: none;">
+                    </div>
+                    
+                    <div style="text-align: right;">
+                        <button class="btn" id="btnInjectManual">
+                            <i class="fa-solid fa-bolt"></i> Inject File
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. Games View -->
+            <section id="database-view" class="view">
+                <div class="panel">
+                    <h2><i class="fa-solid fa-gamepad"></i> Steam Games</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Search for any game on Steam to fetch its Lua/Manifest from the Ryuu Database.
+                    </p>
+                    
+                    <div class="search-bar-container">
+                        <input type="text" id="dbSearchInput" placeholder="Enter Game Name or App ID...">
+                        <button class="btn" id="btnDbSearch">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                    </div>
+
+                    <h3 id="topSellersHeader" style="margin-top: 25px; margin-bottom: 15px; font-family: 'Akira Expanded', sans-serif; font-weight: normal; letter-spacing: 1px; color: var(--primary-color);">Top Sellers</h3>
+                    <div id="topSellersGrid" class="game-grid" style="margin-bottom: 30px;">
+                        <div style="color: var(--text-muted);">Loading top sellers...</div>
+                    </div>
+
+                    <h3 style="margin-top: 15px; margin-bottom: 15px; font-family: 'Akira Expanded', sans-serif; font-weight: normal; letter-spacing: 1px; color: var(--primary-color);">Search Results</h3>
+
+                    <div id="dbResults" class="game-grid">
+                        <!-- Search results will be injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. Library View -->
+            <section id="library-view" class="view">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2><i class="fa-brands fa-steam"></i> Your Steam Library</h2>
+                        <button class="btn btn-secondary" id="btnScanLibrary">
+                            <i class="fa-solid fa-rotate-right"></i> Scan Library
+                        </button>
+                    </div>
+                    
+                    <div id="libraryList" class="game-grid">
+                        <!-- Installed games will be injected here -->
+                    </div>
+                </div>
+            </section>
+            <!-- 4. Online Fixes View -->
+            <section id="onlinefixes-view" class="view">
+                <div class="panel">
+                    <h2><i class="fa-solid fa-cloud-arrow-down"></i> Online Fixes Repository</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Search for and automatically install multiplayer fixes directly into your games.
+                    </p>
+                    <div class="search-bar-container">
+                        <input type="text" id="fixSearchInput" placeholder="Enter Game Name or App ID">
+                        <button class="btn" onclick="searchOnlineFixes()">
+                            <i class="fa-solid fa-search"></i> Search
+                        </button>
+                    </div>
+                </div>
+                <div class="game-grid" id="fixResultsGrid">
+                    <!-- Fix results will be populated here -->
+                </div>
+            </section>
+
+            <!-- 4.5. New Fixes View (Ryuu Fixes style) -->
+            <section id="fixes-view" class="view">
+                <div class="panel fixes-header-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2><i class="fa-solid fa-folder-open" style="color: #6366f1;"></i> Ryuu Fixes</h2>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-secondary btn-sm"><i class="fa-solid fa-code"></i> Generator</button>
+                            <button class="btn btn-secondary btn-sm"><img src="icons/bc415cad2ccab3cff12c3f5708491455.jpg" style="width:20px; height:20px; border-radius:50%; margin-right:5px; vertical-align: middle;"> @nationtools</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div class="search-bar-container fixes-search" style="flex: 1; margin: 0;">
+                            <i class="fa-solid fa-search search-icon"></i>
+                            <input type="text" id="newFixSearchInput" placeholder="Search for a game or appid...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ryuu-fixes-grid" id="ryuuFixesGrid" style="display: none;">
+                    <div style="color: var(--text-muted); padding: 20px;">Loading fixes...</div>
+                </div>
+            </section>
+
+            <!-- 5. Downloads View -->
+            <section id="downloads-view" class="view">
+                <div class="panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <h2><i class="fa-solid fa-download"></i> Active Downloads</h2>
+                        <button class="btn btn-secondary btn-sm" id="btnClearDownloads" style="background: rgba(255, 50, 50, 0.1); color: var(--danger); border: 1px solid rgba(255, 50, 50, 0.3);">
+                            <i class="fa-solid fa-trash"></i> Clear All
+                        </button>
+                    </div>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Track your file downloads and active Steam game installations.
+                    </p>
+                    
+                    <!-- Download Directory Setting -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+                        <div style="flex: 1; padding-right: 20px;">
+                            <h3 style="font-size: 16px; margin-bottom: 5px;">Custom Download Directory</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;" id="lblDownloadDir">Default: Windows Downloads Folder</p>
+                        </div>
+                        <button class="btn btn-secondary" id="btnSelectDownloadDir">
+                            <i class="fa-solid fa-folder"></i> Browse
+                        </button>
+                    </div>
+                    
+                    <div id="downloadsContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                        <!-- Download items will go here -->
+                        <div id="noDownloadsMessage" style="color: var(--text-muted);">No active downloads.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6. Settings View -->
+            <section id="settings-view" class="view">
+                <div class="panel">
+                    <h2><i class="fa-solid fa-gear"></i> Settings & Tools</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 20px;">
+                        Manage additional application features and installations.
+                    </p>
+
+                    <!-- Appearance Settings -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 5px;" data-i18n="LANGUAGE_SETTING_TITLE">Language</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;" data-i18n="LANGUAGE_SETTING_DESC">Select your preferred application language.</p>
+                        </div>
+                        <div>
+                            <select id="languageSelect" class="settings-select" style="min-width: 150px;">
+                                <option value="en">English</option>
+                                <option value="es">Español</option>
+                                <option value="fr">Français</option>
+                                <option value="de">Deutsch</option>
+                                <option value="zh">中文 (Chinese)</option>
+                                <option value="ja">日本語 (Japanese)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Layout Settings -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 5px;">Navigation Layout</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">Choose between a Sidebar or Top Navbar layout.</p>
+                        </div>
+                        <div>
+                            <select id="layoutSelect" class="settings-select">
+                                <option value="topbar">Top Navbar (Default)</option>
+                                <option value="sidebar">Sidebar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Install OpenSteamTools -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border);">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 5px;">Install OpenSteamTools</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">Automatically copy required DLLs to your Steam directory.</p>
+                        </div>
+                        <button class="btn" id="btnInstallTools">
+                            <i class="fa-solid fa-download"></i> Install
+                        </button>
+                    </div>
+
+                    <!-- Community & Watermark -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border); margin-top: 15px;">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 5px;" data-i18n="JOIN_COMMUNITY">Join Our Community</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">Get support, updates, and more on our Discord server.</p>
+                        </div>
+                        <button class="btn" style="background: #5865F2; color: white;" onclick="ipcRenderer.send('open-url', 'https://discord.gg/nationxero')">
+                            <i class="fa-brands fa-discord"></i> <span data-i18n="JOIN">Discord</span>
+                        </button>
+                    </div>
+
+                    <!-- Watermark -->
+                    <div style="margin-top: 40px; text-align: center; color: var(--text-muted); font-size: 13px; opacity: 0.6; letter-spacing: 1px;">
+                        <div style="margin-bottom: 4px;">POWERED BY <strong style="color: var(--primary);">XERO NATION</strong>, MADE BY <strong style="color: var(--primary);">DHYEY</strong></div>
+                    </div>
+                </div>
+            </section>
+            <!-- 7. Game Details View -->
+            <section id="game-details-view" class="view" style="padding: 0; overflow-y: auto;">
+                <div id="game-details-hero" style="position: relative; width: 100%; height: 400px; background-size: cover; background-position: center; border-bottom: 1px solid var(--glass-border);">
+                    <div style="position: absolute; top:0; left:0; right:0; bottom:0; background: linear-gradient(to bottom, rgba(15,15,17,0.3), #0f0f11);"></div>
+                    <button class="btn btn-secondary" id="btnBackToGrid" onclick="document.getElementById('btnBackToGrid').style.display='none'; document.querySelector('.tab-btn.active').click();" style="position: absolute; top: 20px; left: 20px; z-index: 10; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1);">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
+                    <div style="position: absolute; bottom: -20px; left: 40px; right: 40px; display: flex; align-items: flex-end; gap: 30px;">
+                        <img id="game-details-logo" src="" style="width: 300px; border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.8); display: none;">
+                        <div style="padding-bottom: 25px;">
+                            <h1 id="game-details-title" style="font-family: 'Akira Expanded', sans-serif; font-size: 38px; margin-bottom: 15px; text-shadow: 0 0 30px rgba(255,255,255,0.4); color: white; line-height: 1.1;">Game Title</h1>
+                            <div id="game-details-badges" style="display: flex; gap: 10px; margin-bottom: 10px;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="padding: 60px 40px 40px 40px; display: flex; gap: 40px;">
+                    <!-- Left: Info -->
+                    <div style="flex: 2;">
+                        <h3 style="font-family: 'Akira Expanded', sans-serif; font-size: 16px; margin-bottom: 20px; color: var(--text-muted); letter-spacing: 2px;">ABOUT</h3>
+                        <div id="game-details-desc" style="color: var(--text-light); line-height: 1.8; font-size: 15px; margin-bottom: 40px;">
+                            Loading description...
+                        </div>
+                        
+                        <h3 style="font-family: 'Akira Expanded', sans-serif; font-size: 16px; margin-bottom: 20px; color: var(--text-muted); letter-spacing: 2px;">SCREENSHOTS</h3>
+                        <div id="game-details-screenshots" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                            <!-- Screenshots injected here -->
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Actions -->
+                    <div style="flex: 1;">
+                        <div class="panel" style="position: sticky; top: 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); box-shadow: 0 0 40px rgba(0,0,0,0.5); backdrop-filter: blur(10px);">
+                            <h3 style="font-family: 'Akira Expanded', sans-serif; font-size: 16px; margin-bottom: 25px; text-align: center; letter-spacing: 2px;">ACTIONS</h3>
+                            <div id="game-details-actions" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Buttons injected here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <div id="version-watermark">v1.0.x</div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div class="modal-overlay" id="confirmModal">
+        <div class="modal-content">
+            <h3 id="modalTitle">Confirm</h3>
+            <p id="modalMessage">Are you sure?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" id="modalBtnCancel">Cancel</button>
+                <button class="btn" id="modalBtnConfirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Startup Auto-Install & Verification Screen -->
+    <div id="startupLoadingScreen" class="startup-screen">
+        <div class="startup-card">
+            <div class="startup-logo-container">
+                <img src="icons/bc415cad2ccab3cff12c3f5708491455.jpg" alt="Nation Tools" class="startup-logo">
+                <div class="startup-pulse-ring"></div>
+            </div>
+            <h2 class="startup-title" id="startupTitle">Checking System Components</h2>
+            <p class="startup-desc" id="startupDesc">Verifying OpenSteamTools installation...</p>
+            <div class="startup-progress-bar">
+                <div class="startup-progress-fill" id="startupProgressFill"></div>
+            </div>
+            <div class="startup-status" id="startupStatus">
+                <i class="fa-solid fa-circle-notch fa-spin" id="startupIcon"></i>
+                <span id="startupStatusText">Scanning Steam directory...</span>
+            </div>
+            <div id="startupActionContainer" style="display: none; margin-top: 20px; width: 100%;">
+                <button id="btnStartupInstall" class="btn" style="width: 100%; background: #ffffff; color: #000000; justify-content: center;">
+                    <i class="fa-solid fa-download" style="color: #000000;"></i> Install from GitHub
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader"></div>
+        <div class="loading-text" id="loadingText">Processing...</div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container"></div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "name": "nation-tools",
+  "version": "1.0.34",
+  "description": "Nation Tools Steam Manager",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "node scripts/obfuscate.js && node scripts/build.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@node-steam/vdf": "^2.0.1",
+    "adm-zip": "^0.5.10",
+    "axios": "^1.7.0",
+    "cheerio": "^1.2.0",
+    "dotenv": "^16.4.5",
+    "electron-updater": "^6.8.9",
+    "node-7z": "^3.0.0",
+    "win-7zip": "^0.1.1"
+  },
+  "devDependencies": {
+    "electron": "^30.0.0",
+    "electron-builder": "^26.15.3",
+    "fs-extra": "^11.4.0",
+    "javascript-obfuscator": "^5.6.0"
+  },
+  "build": {
+    "appId": "com.nationtools.app",
+    "productName": "Nation Tools",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "steamtoolsbot-dhyey",
+        "repo": "nationtools",
+        "releaseType": "release"
+      }
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/win-7zip/**/*"
+    ],
+    "files": [
+      {
+        "from": "build_dist",
+        "to": ".",
+        "filter": [
+          "**/*"
+        ]
+      },
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "icons/icon.png"
+    }
+  }
+}

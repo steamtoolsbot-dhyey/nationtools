@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build_dist/
+.env
+*.exe
+*.zip
+*.7z
+dnSpy*
+depotbox*
+empire*
+source_*
+.gemini/
