@@ -258,7 +258,91 @@ window.onload = async () => {
         if (watermark) watermark.innerText = `v${version}`;
     } catch(e) {}
     
-    // 2. Settings UI Init
+    // 2. Startup OpenSteamTools Verification & Auto-Install
+    const startupScreen = document.getElementById('startupLoadingScreen');
+    const startupTitle = document.getElementById('startupTitle');
+    const startupDesc = document.getElementById('startupDesc');
+    const startupStatusText = document.getElementById('startupStatusText');
+    const startupProgressFill = document.getElementById('startupProgressFill');
+    const startupIcon = document.getElementById('startupIcon');
+
+    try {
+        const isMissing = await ipcRenderer.invoke('check-tools-missing');
+        if (isMissing) {
+            if (startupTitle) startupTitle.innerText = "Tools Required";
+            if (startupDesc) startupDesc.innerText = "OpenSteamTools is required but missing from your Steam directory.";
+            if (startupStatusText) startupStatusText.innerText = "Waiting for permission to install...";
+            if (startupProgressFill) startupProgressFill.style.width = "50%";
+            if (startupIcon) {
+                startupIcon.className = "fa-solid fa-triangle-exclamation";
+                startupIcon.style.color = "#fbbf24";
+            }
+
+            const btnInstall = document.getElementById('btnStartupInstall');
+            const actionContainer = document.getElementById('startupActionContainer');
+            
+            if (btnInstall && actionContainer) {
+                actionContainer.style.display = 'block';
+                
+                await new Promise(resolve => {
+                    btnInstall.addEventListener('click', async () => {
+                        btnInstall.disabled = true;
+                        btnInstall.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin" style="color: #000000;"></i> Installing...';
+                        
+                        if (startupTitle) startupTitle.innerText = "Installing Tools";
+                        if (startupDesc) startupDesc.innerText = "Downloading and installing required files...";
+                        if (startupStatusText) startupStatusText.innerText = "Downloading from GitHub...";
+                        if (startupIcon) {
+                            startupIcon.className = "fa-solid fa-circle-notch fa-spin";
+                            startupIcon.style.color = "#ffffff";
+                        }
+
+                        const res = await ipcRenderer.invoke('install-tools');
+                        if (res.success) {
+                            if (startupProgressFill) startupProgressFill.style.width = "100%";
+                            if (startupStatusText) startupStatusText.innerText = "Tools installed successfully!";
+                            if (startupIcon) {
+                                startupIcon.className = "fa-solid fa-circle-check";
+                                startupIcon.style.color = "#10b981";
+                            }
+                            await new Promise(r => setTimeout(r, 650));
+                            showToast("Tools installed successfully!", "success");
+                        } else {
+                            if (startupProgressFill) {
+                                startupProgressFill.style.width = "100%";
+                                startupProgressFill.style.background = "#ef4444";
+                            }
+                            if (startupStatusText) startupStatusText.innerText = res.message || "Failed to install tools";
+                            if (startupIcon) {
+                                startupIcon.className = "fa-solid fa-triangle-exclamation";
+                                startupIcon.style.color = "#ef4444";
+                            }
+                            await new Promise(r => setTimeout(r, 1200));
+                            showToast(res.message || "Failed to install tools.", "error");
+                        }
+                        resolve();
+                    });
+                });
+            }
+        } else {
+            if (startupProgressFill) startupProgressFill.style.width = "100%";
+            if (startupStatusText) startupStatusText.innerText = "OpenSteamTools verified!";
+            if (startupIcon) {
+                startupIcon.className = "fa-solid fa-circle-check";
+                startupIcon.style.color = "#10b981";
+            }
+            await new Promise(r => setTimeout(r, 200));
+        }
+    } catch (e) {
+        console.error("Startup tool check error:", e);
+    } finally {
+        if (startupScreen) {
+            startupScreen.classList.add('hidden');
+            setTimeout(() => { startupScreen.style.display = 'none'; }, 500);
+        }
+    }
+
+    // 3. Settings UI Init
     const lblDownloadDir = document.getElementById('lblDownloadDir');
     if (lblDownloadDir && customDownloadDir) {
         lblDownloadDir.innerText = customDownloadDir;

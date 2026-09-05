@@ -478,6 +478,30 @@
         </div>
     </div>
 
+    <!-- Startup Auto-Install & Verification Screen -->
+    <div id="startupLoadingScreen" class="startup-screen">
+        <div class="startup-card">
+            <div class="startup-logo-container">
+                <img src="icons/bc415cad2ccab3cff12c3f5708491455.jpg" alt="Nation Tools" class="startup-logo">
+                <div class="startup-pulse-ring"></div>
+            </div>
+            <h2 class="startup-title" id="startupTitle">Checking System Components</h2>
+            <p class="startup-desc" id="startupDesc">Verifying OpenSteamTools installation...</p>
+            <div class="startup-progress-bar">
+                <div class="startup-progress-fill" id="startupProgressFill"></div>
+            </div>
+            <div class="startup-status" id="startupStatus">
+                <i class="fa-solid fa-circle-notch fa-spin" id="startupIcon"></i>
+                <span id="startupStatusText">Scanning Steam directory...</span>
+            </div>
+            <div id="startupActionContainer" style="display: none; margin-top: 20px; width: 100%;">
+                <button id="btnStartupInstall" class="btn" style="width: 100%; background: #ffffff; color: #000000; justify-content: center;">
+                    <i class="fa-solid fa-download" style="color: #000000;"></i> Install from GitHub
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loader"></div>
