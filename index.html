@@ -69,7 +69,17 @@
             
             <!-- 0. Home View -->
             <section id="home-view" class="view active">
-                <div class="home-hero">
+                <div class="home-hero" style="position: relative;">
+                    <!-- Small Lite Mode Toggle -->
+                    <div style="position: absolute; top: 20px; right: 20px; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.4); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--glass-border); z-index: 10;">
+                        <i class="fa-solid fa-bolt" style="color: var(--accent); font-size: 12px;"></i>
+                        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Perf Mode</span>
+                        <label class="toggle-switch" style="transform: scale(0.65); transform-origin: right center; margin: 0; height: 24px;">
+                            <input type="checkbox" id="liteModeToggleSmall">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
                     <h1 class="home-title">NATION TOOLS</h1>
                     <p class="home-subtitle">Your all-in-one Steam toolkit</p>
                     
@@ -195,20 +205,7 @@
                         </div>
                     </div>
 
-                    <!-- Lite Mode Toggle -->
-                    <div class="lite-mode-toggle-card" id="liteModeCard">
-                        <div class="lite-mode-info">
-                            <i class="fa-solid fa-bolt" style="font-size: 20px; color: var(--accent);"></i>
-                            <div>
-                                <strong>Performance Mode</strong>
-                                <span style="color: var(--text-muted); font-size: 13px; display: block;">Use native Windows theme for lower-end PCs. Disables animations, particles, and custom styling.</span>
-                            </div>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="liteModeToggle">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
+
                 </div>
             </section>
 
@@ -390,6 +387,18 @@
                                 <option value="sidebar">Sidebar</option>
                             </select>
                         </div>
+                    </div>
+
+                    <!-- Performance Mode Settings -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 15px; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 15px;">
+                        <div>
+                            <h3 style="font-size: 16px; margin-bottom: 5px;">Performance Mode</h3>
+                            <p style="color: var(--text-muted); font-size: 13px;">Use native Windows theme for lower-end PCs. Disables animations, particles, and custom styling.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="liteModeToggleSettings">
+                            <span class="toggle-slider"></span>
+                        </label>
                     </div>
 
                     <!-- Install OpenSteamTools -->

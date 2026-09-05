@@ -25,18 +25,24 @@ if (isLiteMode) {
             document.body.classList.remove('lite-mode');
         }
     }
-    // Set toggle checkbox state
-    const toggle = document.getElementById('liteModeToggle');
-    if (toggle) {
-        toggle.checked = isLiteMode;
-        toggle.addEventListener('change', async () => {
-            const enabled = toggle.checked;
-            localStorage.setItem('liteMode', enabled ? 'true' : 'false');
-            await ipcRenderer.invoke('toggle-lite-mode', enabled);
-            // Restart the app to apply the frame change
-            ipcRenderer.invoke('restart-app');
-        });
-    }
+    // Set toggle checkbox state for both locations
+    const toggles = [
+        document.getElementById('liteModeToggleSmall'),
+        document.getElementById('liteModeToggleSettings')
+    ];
+    
+    toggles.forEach(toggle => {
+        if (toggle) {
+            toggle.checked = isLiteMode;
+            toggle.addEventListener('change', async () => {
+                const enabled = toggle.checked;
+                localStorage.setItem('liteMode', enabled ? 'true' : 'false');
+                await ipcRenderer.invoke('toggle-lite-mode', enabled);
+                // Restart the app to apply the frame change
+                ipcRenderer.invoke('restart-app');
+            });
+        }
+    });
 })();
 
 // ==========================================
