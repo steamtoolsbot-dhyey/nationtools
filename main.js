@@ -5,7 +5,7 @@ require('dotenv').config();
 const fs = require('fs');
 const AdmZip = require('adm-zip');
 const axios = require('axios');
-const { exec } = require('child_process');
+const { exec, execSync } = require('child_process');
 const vdf = require('@node-steam/vdf');
 const cheerio = require('cheerio');
 const sevenBin = require('win-7zip');
@@ -321,24 +321,66 @@ ipcMain.handle('install-tools', async () => {
         }
         if (!fs.existsSync(LUA_DIR)) fs.mkdirSync(LUA_DIR, { recursive: true });
 
-        // Method: Download latest tools package from official GitHub release
+        // Close Steam first so DLLs are not locked
+        try {
+            execSync('taskkill /F /IM steam.exe', { stdio: 'ignore' });
+            await new Promise(r => setTimeout(r, 1500));
+        } catch (e) {} // Steam may not be running
+
+        // Strip read-only attributes on existing proxy DLLs before overwriting
+        const proxyDlls = ['OpenSteamTool.dll', 'dwmapi.dll', 'xinput1_4.dll', 'winmm.dll'];
+        for (const dll of proxyDlls) {
+            const dllPath = path.join(STEAM_DIR, dll);
+            if (fs.existsSync(dllPath)) {
+                try {
+                    // Remove read-only, hidden, system attributes
+                    execSync(`attrib -R -H -S "${dllPath}"`, { stdio: 'ignore' });
+                    // Also ensure writable via Node fs
+                    fs.chmodSync(dllPath, 0o666);
+                } catch (e) {
+                    console.warn(`Could not strip attributes on ${dll}:`, e.message);
+                }
+            }
+        }
+
+        // Download latest tools package from official GitHub release
         const TOOLS_URL = 'https://github.com/steamtoolsbot-dhyey/nationtools/releases/download/v1.0.1/tools.zip';
         const res = await axios.get(TOOLS_URL, { responseType: 'arraybuffer', timeout: 30000 });
             
         if (res.status === 200) {
-            try {
-                execSync('taskkill /F /IM steam.exe');
-                await new Promise(r => setTimeout(r, 1500));
-            } catch (e) {}
-            
             const tempZipPath = path.join(os.tmpdir(), 'nation_tools_temp.zip');
             fs.writeFileSync(tempZipPath, res.data);
             
             const zip = new AdmZip(tempZipPath);
             zip.extractAllTo(STEAM_DIR, true);
-            fs.unlinkSync(tempZipPath);
+            try { fs.unlinkSync(tempZipPath); } catch (e) {}
         } else {
             throw new Error(`Failed to download tools. HTTP ${res.status}`);
+        }
+
+        // Verify DLLs were not quarantined by Windows Defender
+        // Wait a moment for Defender real-time protection to act
+        await new Promise(r => setTimeout(r, 2000));
+
+        const criticalFiles = ['OpenSteamTool.dll', 'dwmapi.dll'];
+        const missingAfterInstall = criticalFiles.filter(f => !fs.existsSync(path.join(STEAM_DIR, f)));
+
+        if (missingAfterInstall.length > 0) {
+            // DLLs were deleted by antivirus — show a polite warning dialog
+            dialog.showMessageBoxSync(mainWindow, {
+                type: 'warning',
+                title: 'Windows Defender Blocked Installation',
+                message: 'It looks like Windows Defender removed the tool files after installation.\n\n' +
+                    'To fix this, please add your Steam folder to Windows Defender exclusions:\n\n' +
+                    '1. Open Windows Security\n' +
+                    '2. Go to Virus & threat protection → Manage settings\n' +
+                    '3. Scroll to Exclusions → Add an exclusion → Folder\n' +
+                    `4. Select: ${STEAM_DIR}\n\n` +
+                    'Then try installing again from Settings.',
+                buttons: ['OK'],
+                defaultId: 0
+            });
+            return { success: false, message: 'Windows Defender removed the files. Please add your Steam folder to Defender exclusions and try again.' };
         }
 
         return { success: true };
