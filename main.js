@@ -5,7 +5,7 @@ require('dotenv').config();
 const fs = require('fs');
 const AdmZip = require('adm-zip');
 const axios = require('axios');
-const { exec, execSync } = require('child_process');
+const { exec } = require('child_process');
 const vdf = require('@node-steam/vdf');
 const cheerio = require('cheerio');
 const sevenBin = require('win-7zip');
