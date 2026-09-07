@@ -46,6 +46,121 @@ if (isLiteMode) {
 })();
 
 // ==========================================
+// Theme System
+// ==========================================
+(function initThemeSystem() {
+    // Helper: hex color to rgba string
+    function hexToRgba(hex, alpha) {
+        const r = parseInt(hex.slice(1,3), 16);
+        const g = parseInt(hex.slice(3,5), 16);
+        const b = parseInt(hex.slice(5,7), 16);
+        return `rgba(${r},${g},${b},${alpha})`;
+    }
+
+    const themes = [
+        // ── Default (Original) ──
+        { id: 'default',    name: 'Default',     bg: '#0a0a0a', panel: '#1a1a1f', accent: '#e9590c', titlebar: '#08080c', header: '#0a0a0a', sidebar: '#0c0c0c' },
+        // ── Blues ──
+        { id: 'ocean',      name: 'Deep Ocean',  bg: '#060d18', panel: '#0c1828', accent: '#2563eb', titlebar: '#040910', header: '#060d18', sidebar: '#081020' },
+        { id: 'midnight',   name: 'Midnight',    bg: '#020410', panel: '#080c1e', accent: '#6366f1', titlebar: '#01020a', header: '#020410', sidebar: '#050816' },
+        { id: 'steam',      name: 'Steam',       bg: '#0e1820', panel: '#141e2c', accent: '#66c0f4', titlebar: '#0a1218', header: '#0e1820', sidebar: '#0c1620' },
+        { id: 'arctic',     name: 'Arctic',      bg: '#060e16', panel: '#0c1822', accent: '#06b6d4', titlebar: '#040a10', header: '#060e16', sidebar: '#08121c' },
+        // ── Greens ──
+        { id: 'forest',     name: 'Forest',      bg: '#060e06', panel: '#0c180c', accent: '#16a34a', titlebar: '#040a04', header: '#060e06', sidebar: '#081208' },
+        { id: 'neon',       name: 'Neon',        bg: '#030308', panel: '#06061a', accent: '#00ff88', titlebar: '#020206', header: '#030308', sidebar: '#050512' },
+        // ── Reds / Warm ──
+        { id: 'fire',       name: 'Ember',       bg: '#100604', panel: '#1c0e08', accent: '#dc2626', titlebar: '#0a0402', header: '#100604', sidebar: '#140a06' },
+        { id: 'rose',       name: 'Rose',        bg: '#0e060a', panel: '#1a0c14', accent: '#e11d48', titlebar: '#0a0408', header: '#0e060a', sidebar: '#120810' },
+        { id: 'cherry',     name: 'Cherry',      bg: '#0c050a', panel: '#180a14', accent: '#ec4899', titlebar: '#08040a', header: '#0c050a', sidebar: '#100810' },
+        // ── Purple ──
+        { id: 'purple',     name: 'Violet',      bg: '#08050e', panel: '#100a1c', accent: '#8b5cf6', titlebar: '#06040a', header: '#08050e', sidebar: '#0c0816' },
+        { id: 'grape',      name: 'Grape',       bg: '#0a0610', panel: '#140c20', accent: '#a855f7', titlebar: '#06040c', header: '#0a0610', sidebar: '#0e0a18' },
+        // ── Gold / Bronze ──
+        { id: 'gold',       name: 'Gold',        bg: '#0e0c04', panel: '#1a1608', accent: '#ca8a04', titlebar: '#0a0804', header: '#0e0c04', sidebar: '#121006' },
+        { id: 'bronze',     name: 'Bronze',      bg: '#0c0a04', panel: '#18140a', accent: '#b45309', titlebar: '#080604', header: '#0c0a04', sidebar: '#100e08' },
+        // ── Special ──
+        { id: 'cyberpunk',  name: 'Cyberpunk',   bg: '#06060c', panel: '#0c0c1e', accent: '#eab308', titlebar: '#04040a', header: '#06060c', sidebar: '#0a0a16' },
+        { id: 'graphite',   name: 'Graphite',    bg: '#0c0c0e', panel: '#16161a', accent: '#71717a', titlebar: '#08080a', header: '#0c0c0e', sidebar: '#101012' },
+    ];
+
+    const savedTheme = localStorage.getItem('appTheme') || 'default';
+
+    function applyTheme(themeId) {
+        const theme = themes.find(t => t.id === themeId) || themes[0];
+        const root = document.documentElement;
+
+        // Core backgrounds
+        root.style.setProperty('--bg-color', theme.bg);
+        root.style.setProperty('--bg-dark', theme.bg);
+        root.style.setProperty('--bg-panel', theme.panel);
+
+        // Accent colors
+        root.style.setProperty('--accent', theme.accent);
+        root.style.setProperty('--accent-glow', hexToRgba(theme.accent, 0.6));
+        root.style.setProperty('--dynamic-glow', theme.accent);
+        root.style.setProperty('--dynamic-bg', hexToRgba(theme.accent, 0.05));
+
+        // Titlebar, header, sidebar
+        root.style.setProperty('--titlebar-bg', hexToRgba(theme.titlebar, 0.98));
+        root.style.setProperty('--header-bg', `linear-gradient(135deg, ${hexToRgba(theme.header, 0.98)} 0%, ${hexToRgba(theme.panel, 0.95)} 100%)`);
+        root.style.setProperty('--sidebar-bg', hexToRgba(theme.sidebar, 0.95));
+
+        // Glass
+        root.style.setProperty('--glass-bg', hexToRgba(theme.panel, 0.4));
+        root.style.setProperty('--glass-border', hexToRgba(theme.accent, 0.08));
+
+        // Body background
+        document.body.style.backgroundColor = theme.bg;
+
+        localStorage.setItem('appTheme', themeId);
+
+        // Update active state on cards
+        document.querySelectorAll('.theme-card').forEach(card => {
+            card.classList.toggle('active', card.dataset.theme === themeId);
+        });
+    }
+
+    function renderThemeCards() {
+        const grid = document.getElementById('themeGrid');
+        if (!grid) return;
+        grid.innerHTML = '';
+
+        themes.forEach(theme => {
+            const card = document.createElement('div');
+            card.className = 'theme-card' + (theme.id === savedTheme ? ' active' : '');
+            card.dataset.theme = theme.id;
+            card.innerHTML = `
+                <div class="theme-card-preview" style="background: ${theme.bg};">
+                    <div class="swatch swatch-sidebar" style="background: ${theme.sidebar};"></div>
+                    <div class="swatch swatch-header" style="background: ${theme.panel};"></div>
+                    <div class="swatch swatch-accent" style="background: ${theme.accent};"></div>
+                </div>
+                <div class="theme-card-name">${theme.name}</div>
+            `;
+            card.addEventListener('click', () => applyTheme(theme.id));
+            grid.appendChild(card);
+        });
+    }
+
+    // Show All Themes toggle
+    const btnShowAll = document.getElementById('btnShowAllThemes');
+    if (btnShowAll) {
+        let expanded = false;
+        btnShowAll.addEventListener('click', () => {
+            const grid = document.getElementById('themeGrid');
+            expanded = !expanded;
+            grid.classList.toggle('expanded', expanded);
+            btnShowAll.innerHTML = expanded
+                ? 'Show less <i class="fa-solid fa-chevron-up" style="margin-left: 6px; font-size: 10px;"></i>'
+                : 'Show all themes <i class="fa-solid fa-chevron-down" style="margin-left: 6px; font-size: 10px;"></i>';
+        });
+    }
+
+    renderThemeCards();
+    applyTheme(savedTheme);
+})();
+
+// ==========================================
 // Particle System
 // ==========================================
 (function initParticles() {
