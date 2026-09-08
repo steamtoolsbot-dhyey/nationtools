@@ -38,6 +38,9 @@
                 <button class="tab-btn" data-target="fixes-view">
                     <i class="fa-solid fa-folder-open"></i> <span data-i18n="RYUU_FIXES">Fixes</span>
                 </button>
+                <button class="tab-btn" data-target="luafixes-view">
+                    <i class="fa-solid fa-code"></i> Lua Fixes
+                </button>
                 <button class="tab-btn" data-target="library-view">
                     <i class="fa-solid fa-gamepad"></i> <span data-i18n="MY_LIBRARY">Library</span>
                 </button>
@@ -258,6 +261,7 @@
                         <!-- Search results will be injected here -->
                     </div>
                 </div>
+                <!-- Lua Fix Details Modal - REMOVED -->
             </section>
 
             <!-- 3. Library View -->
@@ -317,6 +321,71 @@
                     <div style="color: var(--text-muted); padding: 20px;">Loading fixes...</div>
                 </div>
             </section>
+
+            <!-- 4.6. Lua Fixes View (lua.tools integration) -->
+            <section id="luafixes-view" class="view">
+                <!-- Discord Login Screen (Shown when not authenticated) -->
+                <div id="luaLoginContainer" class="lua-login-container" style="display: none;">
+                    <div class="lua-login-card" style="max-width: 400px; padding: 2.5rem 2rem;">
+                        <div class="lua-discord-badge" style="width: 76px; height: 76px; font-size: 38px; margin-bottom: 1.5rem;">
+                            <i class="fa-brands fa-discord"></i>
+                        </div>
+                        <h2 style="font-size: 1.35rem; font-weight: 700; color: #fff; margin-bottom: 1.75rem; line-height: 1.4;">Please Login With Discord To Continue</h2>
+
+                        <button id="btnLuaDiscordLogin" class="btn btn-discord" style="width: 100%; justify-content: center; padding: 14px 20px; font-size: 15px;">
+                            <i class="fa-brands fa-discord"></i> Login with Discord
+                        </button>
+                        
+                        <div id="luaLoginStatus" style="display: none; margin-top: 15px; font-size: 13px; color: #a78bfa;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Waiting for Discord authorization...
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel fixes-header-panel" id="luaFixesHeaderPanel" style="display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2><i class="fa-solid fa-code" style="color: #a78bfa;"></i> Lua Fixes (lua.tools)</h2>
+                        <div id="luaUserBadge" style="display: none; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; border: 1px solid var(--glass-border);">
+                            <img id="luaUserAvatar" src="" style="width: 24px; height: 24px; border-radius: 50%; display: none; object-fit: cover;">
+                            <span id="luaUserName" style="font-size: 13px; color: #e5e7eb; font-weight: 500;"></span>
+                            <button class="btn btn-secondary btn-sm" id="btnLuaLogout" title="Sign out of lua.tools" style="padding: 2px 8px; font-size: 11px; background: transparent; border: none; color: var(--text-muted); cursor: pointer;">
+                                <i class="fa-solid fa-right-from-bracket"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div class="search-bar-container fixes-search" style="flex: 1; margin: 0;">
+                            <i class="fa-solid fa-search search-icon"></i>
+                            <input type="text" id="luaFixSearchInput" placeholder="Search for a game or appid...">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ryuu-fixes-grid" id="luaFixesGrid" style="display: none;">
+                    <div style="color: var(--text-muted); padding: 20px;">Loading lua.tools fixes...</div>
+                </div>
+
+                <!-- Full Page View (Hidden by default) -->
+                <div id="luaFullPageContainer" style="display: none; padding: 1rem 1.5rem 4rem; max-width: 880px; margin: 0 auto; animation: fadeIn 0.3s ease;">
+                    <button class="btn btn-secondary" id="btnBackToLuaGrid" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-muted); background: transparent; border: none; padding: 0.5rem 0; margin-bottom: 1.25rem; font-size: 0.9rem; cursor: pointer; transition: color 0.2s;">
+                        <i class="fa-solid fa-arrow-left"></i> All games
+                    </button>
+                    
+                    <div class="glass-card" style="overflow: hidden; margin-bottom: 1.75rem; border: 1px solid var(--glass-border); border-radius: 12px; background: rgba(0,0,0,0.2);">
+                        <img id="luaFullPageBanner" src="" style="width: 100%; display: block; max-height: 240px; object-fit: cover;">
+                        <div style="padding: 1.25rem 1.5rem; background: linear-gradient(180deg, rgba(20,20,25,0.8) 0%, rgba(10,10,15,0.95) 100%);">
+                            <h1 id="luaFullPageTitle" style="font-size: 1.6rem; font-weight: 700; color: #f3f4f6; margin: 0 0 0.25rem 0;"></h1>
+                            <span id="luaFullPageAppId" style="font-size: 0.8rem; color: #6b7280;"></span>
+                        </div>
+                    </div>
+                    
+                    <div id="luaFullPageReleasesContainer" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Releases populated by JS -->
+                    </div>
+                </div>
+            </section>
+
 
             <!-- 5. Downloads View -->
             <section id="downloads-view" class="view">
@@ -499,6 +568,34 @@
             <div class="modal-actions">
                 <button class="btn btn-secondary" id="modalBtnCancel">Cancel</button>
                 <button class="btn" id="modalBtnConfirm">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discord Login Modal -->
+    <div class="modal-overlay" id="discordAuthModal" style="display: none;">
+        <div class="modal-content">
+            <h3 style="margin-top: 0;"><i class="fa-brands fa-discord" style="color: #5865F2;"></i> Discord Login Required</h3>
+            <p style="margin-bottom: 20px; color: var(--text-muted);">
+                Downloading from lua.tools requires you to authenticate with Discord. Click below to log in securely.
+            </p>
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="document.getElementById('discordAuthModal').style.display='none'">Cancel</button>
+                <button class="btn" id="btnDiscordLogin" style="background: #5865F2; color: white; border: none;">Login to Discord</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lua Tools Game Details Modal -->
+    <div class="modal-overlay" id="luaFixDetailsModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 id="luaDetailTitle" style="margin-top: 0; margin-bottom: 5px;"><i class="fa-solid fa-code" style="color:#a78bfa"></i> Game Title</h2>
+            <p id="luaDetailSubtitle" style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">App ID: 0</p>
+            <div id="luaReleasesContainer" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding-right: 5px;">
+                <!-- Releases injected here -->
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('luaFixDetailsModal').classList.remove('active')">Close</button>
             </div>
         </div>
     </div>

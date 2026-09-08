@@ -339,6 +339,11 @@ function showConfirmModal(title, message) {
         const btnConfirm = document.getElementById('modalBtnConfirm');
         const btnCancel = document.getElementById('modalBtnCancel');
         
+        btnCancel.style.display = '';
+        btnConfirm.innerText = 'OK';
+        btnConfirm.style.background = '';
+        btnConfirm.style.color = '';
+        
         // Clean up old event listeners by replacing buttons
         const newBtnConfirm = btnConfirm.cloneNode(true);
         const newBtnCancel = btnCancel.cloneNode(true);
@@ -355,6 +360,38 @@ function showConfirmModal(title, message) {
         newBtnCancel.addEventListener('click', () => {
             modal.classList.remove('active');
             resolve(false);
+        });
+    });
+}
+
+// Custom Error / Alert Modal
+function showErrorModal(title, message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirmModal');
+        document.getElementById('modalTitle').innerHTML = `<i class="fa-solid fa-circle-exclamation" style="color:var(--danger);margin-right:8px;"></i> ${title}`;
+        document.getElementById('modalMessage').innerText = message;
+        
+        const btnConfirm = document.getElementById('modalBtnConfirm');
+        const btnCancel = document.getElementById('modalBtnCancel');
+        
+        btnCancel.style.display = 'none';
+        btnConfirm.innerText = 'OK';
+        btnConfirm.style.background = 'var(--accent, #e9590c)';
+        btnConfirm.style.color = '#fff';
+        
+        const newBtnConfirm = btnConfirm.cloneNode(true);
+        const newBtnCancel = btnCancel.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+        btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+        
+        modal.classList.add('active');
+        
+        newBtnConfirm.addEventListener('click', () => {
+            modal.classList.remove('active');
+            btnCancel.style.display = '';
+            btnConfirm.style.background = '';
+            btnConfirm.style.color = '';
+            resolve();
         });
     });
 }
@@ -616,6 +653,422 @@ async function loadRyuuFixes() {
     }
 }
 
+// ==========================================
+// ==========================================
+// LUA TOOLS INTEGRATION & DISCORD AUTH
+// ==========================================
+let cachedLuaFixes = [];
+let isLuaAuthenticated = false;
+
+async function checkLuaAuthAndLoad() {
+    const loginContainer = document.getElementById('luaLoginContainer');
+    const headerPanel = document.getElementById('luaFixesHeaderPanel');
+    const grid = document.getElementById('luaFixesGrid');
+    const fullPage = document.getElementById('luaFullPageContainer');
+    const userBadge = document.getElementById('luaUserBadge');
+    const userAvatar = document.getElementById('luaUserAvatar');
+    const userName = document.getElementById('luaUserName');
+
+    try {
+        const auth = await ipcRenderer.invoke('get-lua-auth-status');
+        if (auth && auth.loggedIn) {
+            isLuaAuthenticated = true;
+            if (loginContainer) loginContainer.style.display = 'none';
+            if (headerPanel && (!fullPage || fullPage.style.display !== 'block')) {
+                headerPanel.style.display = 'block';
+            }
+            if (userBadge) {
+                userBadge.style.display = 'flex';
+                if (userName) userName.textContent = (auth.user && auth.user.name) ? auth.user.name : 'Discord User';
+                if (userAvatar) {
+                    if (auth.user && auth.user.avatar) {
+                        userAvatar.src = auth.user.avatar;
+                        userAvatar.style.display = 'block';
+                    } else {
+                        userAvatar.style.display = 'none';
+                    }
+                }
+            }
+            if (!fullPage || fullPage.style.display !== 'block') {
+                if (grid) grid.style.display = 'grid';
+                loadLuaFixes();
+            }
+            return true;
+        } else {
+            isLuaAuthenticated = false;
+            showLuaLoginScreen();
+            return false;
+        }
+    } catch (e) {
+        console.error("Error checking lua auth:", e);
+        showLuaLoginScreen();
+        return false;
+    }
+}
+
+function showLuaLoginScreen() {
+    const loginContainer = document.getElementById('luaLoginContainer');
+    const headerPanel = document.getElementById('luaFixesHeaderPanel');
+    const grid = document.getElementById('luaFixesGrid');
+    const fullPage = document.getElementById('luaFullPageContainer');
+    if (loginContainer) loginContainer.style.display = 'flex';
+    if (headerPanel) headerPanel.style.display = 'none';
+    if (grid) grid.style.display = 'none';
+    if (fullPage) fullPage.style.display = 'none';
+}
+
+async function loadLuaFixes() {
+    if (!isLuaAuthenticated) return;
+    const grid = document.getElementById('luaFixesGrid');
+    
+    if (cachedLuaFixes.length > 0) return;
+    
+    grid.innerHTML = '<div style="color: var(--text-muted); padding: 20px;"><i class="fa-solid fa-spinner fa-spin"></i> Fetching games from lua.tools...</div>';
+    
+    const games = await ipcRenderer.invoke('fetch-lua-tools-games');
+    
+    if (games && games.length > 0) {
+        cachedLuaFixes = games;
+        grid.style.display = 'grid';
+        renderLuaFixesGrid(cachedLuaFixes);
+    } else {
+        grid.innerHTML = '<div style="color: var(--danger); padding: 20px;">Failed to fetch games from lua.tools.</div>';
+    }
+}
+
+function renderLuaFixesGrid(gamesArray) {
+    const grid = document.getElementById('luaFixesGrid');
+    grid.innerHTML = '';
+    
+    if (gamesArray.length === 0) {
+        grid.innerHTML = '<div style="color: var(--text-muted); padding: 20px;">No games found.</div>';
+        return;
+    }
+    
+    gamesArray.forEach(game => {
+        const card = document.createElement('div');
+        card.className = 'game-card';
+        card.innerHTML = `
+            <img src="${game.imgSrc}" alt="${game.title}">
+            <div class="game-info">
+                <h3>${game.title}</h3>
+                <p style="margin:0;font-size:12px;color:var(--text-muted);">${game.subtitle}</p>
+            </div>
+            <div class="game-actions" style="margin-top:auto;padding:15px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;">
+                <span style="font-size:11px;color:var(--text-muted);">${game.appId}</span>
+                <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation(); openLuaFixDetails('${game.appId}')">
+                    <i class="fa-solid fa-eye"></i> View
+                </button>
+            </div>
+        `;
+        card.addEventListener('click', () => {
+            openLuaFixDetails(game.appId);
+        });
+        grid.appendChild(card);
+    });
+}
+
+// Search for Lua Fixes
+const luaFixSearchInput = document.getElementById('luaFixSearchInput');
+if (luaFixSearchInput) {
+    luaFixSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        if (!query) {
+            renderLuaFixesGrid(cachedLuaFixes);
+            return;
+        }
+        const filtered = cachedLuaFixes.filter(g => (g.title && g.title.toLowerCase().includes(query)) || (g.appId && g.appId.toString().includes(query)));
+        renderLuaFixesGrid(filtered);
+    });
+}
+
+// Ensure load is called when tab is clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-target');
+        if (target === 'luafixes-view') {
+            checkLuaAuthAndLoad();
+            // Reset to grid view if user re-clicks the tab and is authenticated
+            const headerPanel = document.getElementById('luaFixesHeaderPanel');
+            const fullPage = document.getElementById('luaFullPageContainer');
+            const grid = document.getElementById('luaFixesGrid');
+            if (isLuaAuthenticated && fullPage && fullPage.style.display === 'block') {
+                fullPage.style.display = 'none';
+                if (headerPanel) headerPanel.style.display = 'block';
+                if (grid) grid.style.display = 'grid';
+            }
+        } else if (target === 'library-view') {
+            loadLibrary();
+        }
+    });
+});
+
+async function openLuaFixDetails(appId) {
+    const grid = document.getElementById('luaFixesGrid');
+    const container = document.getElementById('luaFullPageContainer');
+    const headerPanel = document.getElementById('luaFixesHeaderPanel');
+    const titleEl = document.getElementById('luaFullPageTitle');
+    const subtitleEl = document.getElementById('luaFullPageAppId');
+    const bannerEl = document.getElementById('luaFullPageBanner');
+    const releasesContainer = document.getElementById('luaFullPageReleasesContainer');
+    
+    const gameData = cachedLuaFixes.find(g => String(g.appId) === String(appId));
+    const title = gameData ? gameData.title : "Unknown Game";
+    
+    // Hide grid and header/search panel, show full page
+    if (headerPanel) headerPanel.style.display = 'none';
+    grid.style.display = 'none';
+    container.style.display = 'block';
+    
+    // Populate Header
+    titleEl.textContent = title;
+    subtitleEl.textContent = `App ID: ${appId}`;
+    bannerEl.src = gameData && gameData.imgSrc ? gameData.imgSrc : `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`;
+    
+    releasesContainer.innerHTML = '';
+    
+    let releases = gameData ? gameData.fixes : [];
+    
+    if (!releases || releases.length === 0) {
+        releasesContainer.innerHTML = '<div style="color:var(--text-muted);padding:25px;text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> Checking lua.tools for latest fixes...</div>';
+        try {
+            const updated = await ipcRenderer.invoke('fetch-single-lua-game', appId);
+            if (updated && updated.fixes && updated.fixes.length > 0) {
+                if (gameData) gameData.fixes = updated.fixes;
+                releases = updated.fixes;
+            }
+        } catch(e) {}
+        
+        if (!releases || releases.length === 0) {
+            releasesContainer.innerHTML = '<div style="color:var(--text-muted);padding:20px;text-align:center;background:rgba(0,0,0,0.2);border-radius:8px;">No fixes have been uploaded for this game yet.</div>';
+            return;
+        }
+    }
+    
+    releasesContainer.innerHTML = '';
+    releases.forEach(rel => {
+        const div = document.createElement('div');
+        div.style = 'background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 8px; padding: 1.5rem; transition: background 0.2s;';
+        div.onmouseover = () => div.style.background = 'rgba(255,255,255,0.05)';
+        div.onmouseout = () => div.style.background = 'rgba(255,255,255,0.03)';
+        
+        let tagsHtml = (rel.tags || []).map(t => `<span style="font-size:11px;padding:4px 10px;border-radius:12px;background:${t.color || '#3b82f6'}20;color:${t.color || '#93c5fd'};border:1px solid ${t.color || '#3b82f6'}40">${t.name}</span>`).join(' ');
+        
+        const cleanDesc = rel.description ? rel.description.replace(/\\n/g, '\n') : 'No installation instructions provided for this build.';
+        
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom: 15px;">
+                <div>
+                    <h4 style="margin:0 0 8px 0; font-size:1.1rem; color: #f3f4f6;">Build ${rel.title || 'Generic'}</h4>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;">${tagsHtml}</div>
+                </div>
+                <div style="display:flex; gap:8px; flex-direction:row; align-items:flex-start;">
+                    <button class="btn btn-sm" onclick="autoApplyLuaFix('${rel.id}', '${appId}', '${(rel.title || 'Generic').replace(/'/g, "\\'")}')" style="font-size:13px;padding:8px 16px;background:var(--accent,#e9590c);color:#fff;border:none;box-shadow:0 0 10px rgba(233,89,12,0.3);cursor:pointer;">
+                        <i class="fa-solid fa-bolt"></i> Auto Apply
+                    </button>
+                    ${rel.hasFix ? `<button class="btn btn-secondary btn-sm" onclick="downloadLuaFixToDownloads('${rel.id}', '${appId}', '${(rel.title || 'Generic').replace(/'/g, "\\'")}')" style="font-size:13px;padding:8px 16px;background:rgba(167,139,250,0.15);color:#a78bfa;border-color:rgba(167,139,250,0.4);"><i class="fa-solid fa-download"></i> Download Fix</button>` : ''}
+                </div>
+            </div>
+            <div style="font-size:13px;color:#9ca3af;background:rgba(0,0,0,0.3);padding:15px;border-radius:6px;overflow-x:auto; line-height: 1.6; white-space: pre-wrap;">${cleanDesc}</div>
+        `;
+        releasesContainer.appendChild(div);
+    });
+}
+
+// Set up Lua Fixes event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    // Back button from Full Page to Grid
+    const btnBack = document.getElementById('btnBackToLuaGrid');
+    if (btnBack) {
+        btnBack.addEventListener('click', () => {
+            const headerPanel = document.getElementById('luaFixesHeaderPanel');
+            if (headerPanel) headerPanel.style.display = 'block';
+            document.getElementById('luaFullPageContainer').style.display = 'none';
+            document.getElementById('luaFixesGrid').style.display = 'grid';
+        });
+    }
+
+    // Discord Login button
+    const btnDiscord = document.getElementById('btnLuaDiscordLogin');
+    const loginStatus = document.getElementById('luaLoginStatus');
+    if (btnDiscord) {
+        btnDiscord.addEventListener('click', async () => {
+            btnDiscord.disabled = true;
+            btnDiscord.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Connecting to lua.tools...';
+            if (loginStatus) {
+                loginStatus.style.display = 'block';
+                loginStatus.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authorizing with Discord...';
+            }
+
+            try {
+                const res = await ipcRenderer.invoke('lua-discord-login');
+                if (res && res.success) {
+                    showToast("Logged in with Discord successfully!", "success");
+                    await checkLuaAuthAndLoad();
+                } else {
+                    showToast(res && res.message ? res.message : "Discord login was not completed.", "warning");
+                }
+            } catch(e) {
+                showToast("Discord login error: " + e.message, "error");
+            } finally {
+                btnDiscord.disabled = false;
+                btnDiscord.innerHTML = '<i class="fa-brands fa-discord"></i> Login with Discord';
+                if (loginStatus) loginStatus.style.display = 'none';
+            }
+        });
+    }
+
+    // Logout button
+    const btnLogout = document.getElementById('btnLuaLogout');
+    if (btnLogout) {
+        btnLogout.addEventListener('click', async () => {
+            const confirmed = await showConfirmModal("Sign Out", "Are you sure you want to sign out of lua.tools?");
+            if (confirmed) {
+                await ipcRenderer.invoke('lua-logout');
+                showToast("Signed out of lua.tools.", "info");
+                isLuaAuthenticated = false;
+                showLuaLoginScreen();
+            }
+        });
+    }
+
+    // Initial Lua Auth check
+    checkLuaAuthAndLoad();
+});
+
+async function autoApplyLuaFix(fixId, appId, buildTitle) {
+    if (!isLuaAuthenticated) {
+        showToast("Please log in with Discord first.", "warning");
+        showLuaLoginScreen();
+        return;
+    }
+
+    // 1. Check if game is installed in Steam library across all drives
+    let game = currentLibrary.find(g => String(g.appid).trim() === String(appId).trim());
+    if (!game || !game.installPath) {
+        // Double-check with main process in real-time
+        try {
+            const freshApps = await ipcRenderer.invoke('get-installed-apps');
+            currentLibrary = freshApps || [];
+            game = currentLibrary.find(g => String(g.appid).trim() === String(appId).trim());
+        } catch(e) {}
+    }
+
+    if (!game || !game.installPath) {
+        showToast("Please Install The Game First", "error");
+        await showErrorModal("Game Not Installed", "Please Install The Game First");
+        return;
+    }
+
+    // Verify install directory exists on filesystem
+    const folderExists = await ipcRenderer.invoke('check-folder-exists', game.installPath);
+    if (!folderExists) {
+        showToast("Please Install The Game First", "error");
+        await showErrorModal("Game Not Installed", "Please Install The Game First");
+        return;
+    }
+
+    // 2. Confirm Auto Apply
+    const confirmed = await showConfirmModal(
+        "Auto Apply Fix", 
+        `Auto Apply will download and extract the fix directly into:\n\n${game.installPath}\n\nDo you want to proceed?`
+    );
+    if (!confirmed) return;
+
+    // 3. Request download link from lua.tools
+    showToast("Requesting download link from lua.tools...", "info");
+    const res = await ipcRenderer.invoke('get-lua-download-url', fixId, 'fix');
+
+    if (res && res.needLogin) {
+        showToast(res.message || "Please log in with Discord to download.", "warning");
+        showLuaLoginScreen();
+        return;
+    }
+
+    if (!res || !res.success || !res.url) {
+        showToast(res && res.message ? res.message : "Failed to retrieve download link.", "error");
+        return;
+    }
+
+    // 4. Switch to Downloads tab and start Auto Apply
+    navigateTo('downloads-view');
+
+    const downloadId = 'apply-' + Date.now();
+    createDownloadUI(downloadId, `Auto Apply: ${game.name} (${buildTitle || 'Latest'})`);
+
+    const result = await ipcRenderer.invoke('install-online-fix', res.url, game.installPath, downloadId);
+
+    const status = document.getElementById(`dl-status-${downloadId}`);
+    if (result && result.success) {
+        if (status) {
+            status.innerText = "Fix Applied!";
+            status.style.color = "var(--success)";
+        }
+        showToast(`Fix applied successfully to ${game.name}!`, 'success');
+    } else {
+        if (status) {
+            status.innerText = "Failed";
+            status.style.color = "var(--danger)";
+        }
+        showToast(`Failed to apply fix: ${result && result.message ? result.message : 'Unknown error'}`, 'error');
+    }
+}
+
+async function downloadLuaFixToDownloads(fixId, appId, buildTitle) {
+    if (!isLuaAuthenticated) {
+        showToast("Please log in with Discord first.", "warning");
+        showLuaLoginScreen();
+        return;
+    }
+
+    const gameData = cachedLuaFixes.find(g => String(g.appId).trim() === String(appId).trim());
+    const gameName = gameData ? gameData.title : `Game_${appId}`;
+
+    showToast("Requesting download link from lua.tools...", "info");
+    const res = await ipcRenderer.invoke('get-lua-download-url', fixId, 'fix');
+
+    if (res && res.needLogin) {
+        showToast(res.message || "Please log in with Discord to download.", "warning");
+        showLuaLoginScreen();
+        return;
+    }
+
+    if (!res || !res.success || !res.url) {
+        showToast(res && res.message ? res.message : "Failed to retrieve download link.", "error");
+        return;
+    }
+
+    // Switch to Downloads tab
+    navigateTo('downloads-view');
+
+    const downloadId = 'fix-' + Date.now();
+    const cleanGameName = gameName.replace(/[^a-zA-Z0-9_\-\s]/g, '').trim();
+    const itemTitle = `${cleanGameName} Fix (${buildTitle || 'Latest'})`;
+
+    createDownloadUI(downloadId, itemTitle);
+
+    const dlResult = await ipcRenderer.invoke('download-file', res.url, `${cleanGameName}_Fix`, downloadId, customDownloadDir);
+
+    const status = document.getElementById(`dl-status-${downloadId}`);
+    if (dlResult && dlResult.success) {
+        if (status) {
+            status.innerText = "Completed";
+            status.style.color = "var(--success)";
+        }
+        showToast(`Saved to ${dlResult.path || 'Downloads folder'}`, 'success');
+    } else {
+        if (status) {
+            status.innerText = "Error";
+            status.style.color = "var(--danger)";
+        }
+        showToast(`Download failed: ${dlResult && dlResult.message ? dlResult.message : 'Unknown error'}`, 'error');
+    }
+}
+
+function downloadLuaFix(fixId, slot) {
+    downloadLuaFixToDownloads(fixId, '', 'Fix');
+}
+
 // Prompt Restart Steam
 async function promptRestart() {
     const confirmed = await showConfirmModal("Success", "Lua added successfully! Restart Steam to apply changes?");
@@ -781,12 +1234,10 @@ const libraryList = document.getElementById('libraryList');
 
 btnScanLibrary.addEventListener('click', loadLibrary);
 
-async function loadLibrary() {
+function renderLibraryList() {
     const libraryList = document.getElementById('libraryList');
-    libraryList.innerHTML = '<div style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Scanning Steam directories...</div>';
+    if (!libraryList) return;
 
-    const apps = await ipcRenderer.invoke('get-installed-apps');
-    currentLibrary = apps;
     libraryList.innerHTML = '';
 
     if (!currentLibrary || currentLibrary.length === 0) {
@@ -834,6 +1285,40 @@ async function loadLibrary() {
         `;
     });
 }
+
+async function loadLibrary(silent = false) {
+    const libraryList = document.getElementById('libraryList');
+    if (!silent && libraryList) {
+        libraryList.innerHTML = '<div style="color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Scanning Steam directories...</div>';
+    }
+
+    try {
+        const apps = await ipcRenderer.invoke('get-installed-apps');
+        currentLibrary = apps || [];
+        renderLibraryList();
+    } catch(e) {
+        console.error("Error loading Steam library:", e);
+    }
+}
+
+// Real-time library change listener from main process
+ipcRenderer.on('steam-library-updated', (event, apps) => {
+    currentLibrary = apps || [];
+    renderLibraryList();
+});
+
+// Update library whenever window gains focus
+window.addEventListener('focus', () => {
+    ipcRenderer.invoke('get-installed-apps').then(apps => {
+        if (apps) {
+            currentLibrary = apps;
+            const libraryView = document.getElementById('library-view');
+            if (libraryView && libraryView.classList.contains('active')) {
+                renderLibraryList();
+            }
+        }
+    }).catch(() => {});
+});
 
 window.deleteLua = async (appId) => {
     const confirmed = await showConfirmModal("Delete Lua", `Are you sure you want to delete the injected Lua for App ID ${appId}?`);

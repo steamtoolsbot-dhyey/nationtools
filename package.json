@@ -1,6 +1,6 @@
 {
   "name": "nation-tools",
-  "version": "1.0.39",
+  "version": "1.0.40",
   "description": "Nation Tools Steam Manager",
   "main": "main.js",
   "scripts": {

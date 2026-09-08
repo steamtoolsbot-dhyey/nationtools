@@ -1776,3 +1776,120 @@ body.lite-mode .startup-card {
     0% { left: -100%; }
     100% { left: 200%; }
 }
+
+/* ============================
+   LUA TOOLS DISCORD AUTH
+   ============================ */
+.lua-login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 520px;
+    padding: 3rem 1rem;
+    animation: fadeIn 0.4s ease;
+}
+
+.lua-login-card {
+    background: rgba(18, 18, 24, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.6), 0 0 30px rgba(88, 101, 242, 0.08);
+    border-radius: 16px;
+    padding: 2.75rem 2.25rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.lua-login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #5865F2, #a78bfa, #ec4899);
+}
+
+.lua-discord-badge {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: rgba(88, 101, 242, 0.12);
+    border: 1.5px solid rgba(88, 101, 242, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.25rem;
+    font-size: 32px;
+    color: #5865F2;
+    box-shadow: 0 0 24px rgba(88, 101, 242, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lua-discord-badge:hover {
+    transform: scale(1.06);
+    box-shadow: 0 0 32px rgba(88, 101, 242, 0.5);
+}
+
+.lua-login-features {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 1.5rem 0 1.75rem;
+    text-align: left;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 14px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.lua-login-features .feature-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 13px;
+    color: #d1d5db;
+}
+
+.lua-login-features .feature-item i {
+    font-size: 14px;
+    width: 18px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.btn-discord {
+    background: #5865F2 !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 12px 24px !important;
+    border-radius: 8px !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35) !important;
+    transition: all 0.25s ease !important;
+    cursor: pointer !important;
+}
+
+.btn-discord:hover {
+    background: #4752c4 !important;
+    box-shadow: 0 6px 22px rgba(88, 101, 242, 0.5) !important;
+    transform: translateY(-1px);
+}
+
+.btn-discord:active {
+    transform: translateY(0);
+}
+
+.btn-discord:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
