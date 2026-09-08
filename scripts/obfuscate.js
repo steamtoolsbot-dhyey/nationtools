@@ -19,8 +19,7 @@ const filesToCopy = [
     "icons",
     "ryuu",
     "dll",
-    "fonts",
-    "luafixes.json"
+    "fonts"
 ];
 
 filesToCopy.forEach(f => {
