@@ -1260,19 +1260,44 @@ ipcMain.handle('restart-steam', () => {
     }
 });
 
-// Get list of games from lua.tools
-ipcMain.handle('fetch-lua-tools-games', async () => {
+// Helper to load luafixes database from userData or bundled files
+function getLuaFixesData() {
     try {
-        const jsonPath = path.join(__dirname, 'luafixes.json');
-        if (fs.existsSync(jsonPath)) {
-            const data = fs.readFileSync(jsonPath, 'utf8');
-            return JSON.parse(data);
+        const candidatePaths = [
+            path.join(app.getPath('userData'), 'luafixes.json'),
+            path.join(__dirname, 'luafixes.json'),
+            path.join(process.resourcesPath, 'luafixes.json'),
+            path.join(process.resourcesPath, 'app.asar', 'luafixes.json'),
+            path.join(process.cwd(), 'luafixes.json')
+        ];
+
+        for (const p of candidatePaths) {
+            if (fs.existsSync(p)) {
+                const raw = fs.readFileSync(p, 'utf8');
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed) && parsed.length > 0) {
+                    return parsed;
+                }
+            }
         }
-        return [];
     } catch (e) {
         console.error('Failed to load lua tools games:', e.message);
-        return [];
     }
+    return [];
+}
+
+function saveLuaFixesData(data) {
+    try {
+        const userLuaPath = path.join(app.getPath('userData'), 'luafixes.json');
+        fs.writeFileSync(userLuaPath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e) {
+        console.error('Failed to save lua tools games to userData:', e.message);
+    }
+}
+
+// Get list of games from lua.tools
+ipcMain.handle('fetch-lua-tools-games', async () => {
+    return getLuaFixesData();
 });
 
 // Fetch single game fixes dynamically from lua.tools as a fallback
@@ -1359,18 +1384,16 @@ ipcMain.handle('fetch-single-lua-game', async (event, appId) => {
                     };
                 });
                 
-                // Update local luafixes.json cache
-                const jsonPath = path.join(__dirname, 'luafixes.json');
-                if (fs.existsSync(jsonPath)) {
-                    try {
-                        const allGames = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
-                        const g = allGames.find(item => String(item.appId) === String(appId));
-                        if (g) {
-                            g.fixes = fixes;
-                            fs.writeFileSync(jsonPath, JSON.stringify(allGames, null, 2));
-                        }
-                    } catch(e) {}
-                }
+                // Update local luafixes cache in userData
+                try {
+                    const allGames = getLuaFixesData();
+                    const g = allGames.find(item => String(item.appId) === String(appId));
+                    if (g) {
+                        g.fixes = fixes;
+                        saveLuaFixesData(allGames);
+                    }
+                } catch(e) {}
+
                 return { appId, fixes };
             }
         }
